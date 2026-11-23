@@ -1,0 +1,29 @@
+[Unit]
+Description=Telegram Bot com Orquestracao Nativa Systemd (Amazon Linux 2023)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ec2-user
+WorkingDirectory=/home/ec2-user/atividade-modulo2-aws-irede
+
+# 1. ORQUESTRAÇÃO NATIVA - SINAL DE BOOT (Antes do chatbot ligar)
+ExecStartPre=/home/ec2-user/atividade-modulo2-aws-irede/.venv/bin/python /home/ec2-user/atividade-modulo2-aws-irede/src/sinalizador.py start
+
+# 2. EXECUÇÃO PRINCIPAL (Chatbot interativo com filtro de CHAT_ID)
+ExecStart=/home/ec2-user/atividade-modulo2-aws-irede/.venv/bin/python /home/ec2-user/atividade-modulo2-aws-irede/src/test_bot.py
+
+# 3. ORQUESTRAÇÃO NATIVA - SINAL DE SHUTDOWN (Ao desligar a VM)
+ExecStopPost=/home/ec2-user/atividade-modulo2-aws-irede/.venv/bin/python /home/ec2-user/atividade-modulo2-aws-irede/src/sinalizador.py stop
+
+Restart=on-failure
+RestartSec=5
+
+#tempo para o envio da mensagem de shutdown antes de VM fechar
+TimeoutStopSec=30
+Environment="PYTHONUNBUFFERED=1"
+
+[Install]
+WantedBy=multi-user.target
+ 
