@@ -1,40 +1,40 @@
-# Bot Telegram com Orquestração Nativa (Amazon Linux 2023 / AWS EC2) 🤖☁️
+# Bot Telegram com Orquestração Nativa (Amazon Linux 2023 / AWS EC2) 
 
-Este repositório contém a implementação de um **Bot no Telegram** em Python assíncrono (`python-telegram-bot`), configurado para rodar na nuvem em uma instância **Amazon Linux 2023 (EC2)** com **Orquestração Nativa de Ciclo de Vida via Systemd**.
-
----
-
-## 🎯 Funcionalidades Principais
-
-1. **Chatbot com Whitelist Restrita:** O bot só responde ao seu `CHAT_ID` autorizado. Mensagens de estranhos são descartadas silenciosamente sem consumir processamento ou expor dados.
-2. **Monitoramento Nativo de Infraestrutura:** Avisa no Telegram quando a máquina virtual da AWS ligou (boot) e quando está sendo desligada (shutdown), sem custos extras e sem necessidade de credenciais de IAM (Zero IAM).
+Este repositório contém a implementação de um **Bot no Telegram** em Python assíncrono (`python-telegram-bot`), configurado para rodar na nuvem em uma instância **Amazon Linux 2023 (EC2)** com **Orquestração Nativa de Ciclo de Vida via Systemd**, por isso bot executa sua funcinalidade e lança alertas sobre status da EC2.
 
 ---
 
-## 🏗️ Como Funciona a Orquestração no Amazon Linux 2023
+## Funcionalidades 
 
-Delegamos o controle do ciclo de vida ao **Systemd (PID 1)** do Amazon Linux:
+1. **Chatbot com Whitelist Restrita:** O bot copia sua mensagem e envia no chat. Só responde ao seu `CHAT_ID` autorizado. Mensagens de estranhos são descartadas sem consumir processamento ou expor dados.
+2. **Monitoramento Nativo de Infraestrutura:** Avisa no Telegram quando a máquina virtual da AWS ligou (boot) e quando está sendo desligada (shutdown), sem custos extras e sem necessidade de credenciais de IAM.
+
+---
+
+## Orquestração no Amazon Linux 2023
+
+Foi delegado controle do ciclo de vida ao **Systemd (PID 1)** do Amazon Linux:
 
 ```text
                   ┌────────────────────────────────────────────────────────┐
                   │                 LINUX SYSTEMD (PID 1)                  │
                   │                                                        │
   [Start Instance]│  1. [ExecStartPre]  ──► Dispara src/sinalizador.py     │
-  na AWS Console  │         │               (Notifica: "🟢 EC2 Ligou")     │
+  na AWS Console  │         │               (Notifica: "EC2 Ligou")     │
                   │         ▼                                              │
                   │  2. [ExecStart]     ──► Mantém src/test_bot.py ativo   │
                   │         │               (Ouve apenas seu CHAT_ID)      │
                   │         ▼                                              │
    [Stop Instance]│  3. [ExecStopPost]  ──► Dispara src/sinalizador.py     │
-  na AWS Console  │                         (Notifica: "🔴 EC2 Desligando")│
+  na AWS Console  │                         (Notifica: "EC2 Desligando")│
                   └────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 🔒 Configurações de Privacidade e Segurança
+## Configurações de Privacidade e Segurança
 
-### 1. No `@BotFather` (Telegram)
+### 1. Pesquisa por `@BotFather` (Telegram)
 Para garantir máxima privacidade antes de subir para a nuvem:
 * Abra a conversa com o `@BotFather` e envie `/mybots`.
 * Selecione seu bot e vá em **Bot Settings**:
@@ -47,9 +47,9 @@ Para garantir máxima privacidade antes de subir para a nuvem:
 
 ---
 
-## 🧪 Teste Local com Docker (Amazon Linux 2023)
+## Simulação Local com Docker (Amazon Linux 2023)
 
-Antes de enviar para a AWS, você pode testar o comportamento exatamente como rodará na EC2 usando o Docker no seu PC:
+você pode testar o comportamento seelhante como rodará na EC2 usando o Docker no seu PC:
 
 ```bash
 # 1. Constrói a imagem do Amazon Linux 2023 com seu projeto
@@ -59,11 +59,11 @@ docker build -t bot-amazonlinux .
 docker run -it --rm --env-file .env bot-amazonlinux
 ```
 
-> 📱 **Teste o isolamento:** Envie mensagens pelo Telegram. O bot responderá apenas para você!
+> **Teste o isolamento:** Envie mensagens pelo Telegram, observe que o bot responderá apenas para você
 
 ---
 
-## 🚀 Implantação Definitiva na AWS EC2
+## Implantação na AWS EC2
 
 ### 1. Conectar na EC2 e Atualizar o Sistema (Amazon Linux 2023)
 ```bash
@@ -92,9 +92,11 @@ LINK="https://t.me/seu_bot"
 TOKEN_API="SEU_TOKEN_GERADO_NO_BOTFATHER"
 CHAT_ID="SEU_CHAT_ID_NUMERICO"
 ```
-*(Salve com `Ctrl + O`, `Enter` e saia com `Ctrl + X`)*.
+Para descobrir o chat id , pode pesquisar tutoriais como [How to get Telegram Bot Chat ID](https://gist.github.com/nafiesl/4ad622f344cd1dc3bb1ecbe468ff9f8a#file-how_to_get_telegram_chat_id-md)
 
-### 4. Ativar o Serviço no Systemd com 1 Comando
+*(Salve o .env com `Ctrl + O`, `Enter` e saia com `Ctrl + X`)*.
+
+### 4. Ativar o Serviço no Systemd
 O instalador detecta automaticamente o usuário `ec2-user` e os caminhos:
 ```bash
 chmod +x systemd/instalar.sh
@@ -113,7 +115,7 @@ docker run -it --rm --name ec2-simulada --env-file .env bot-amazonlinux
 
 ---
 
-## 🎮 Comandos Úteis na EC2
+## Comandos Úteis na EC2
 
 * **Ver o status do serviço:** `sudo systemctl status bot-orquestrado`
 * **Ver os logs ao vivo:** `journalctl -u bot-orquestrado -f`
